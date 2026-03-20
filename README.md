@@ -15,9 +15,14 @@ example images available on [GitHub](https://github.com/emannix/automating-the-a
 
 ## Models
 
-Baselines - dummy and random forest classifier
+In addition to a dummy classifier baseline, we developed the following models.
 
-YOLO
+### Random forest classifier
 
-SAM3
+For the biofouling data set, we did some feature engineering to explore complexity-related features for images, including Shannon entropy, gradient energy, and variance in each of the red, green, and blue spectrums. 
+Based on these features, we trained a random forest classifier, which unsurprisingly performs quite poorly. The random forest was an ensemble of 500 trees, with max depth of 10, and balanced classes to account for class imbalance.
+
+### YOLO
+
+### SAM3
 
