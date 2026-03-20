@@ -13,6 +13,14 @@ example images available on [GitHub](https://github.com/emannix/automating-the-a
 
 2. Fouling detection dataset, available on [Roboflow](https://universe.roboflow.com/abdul-vdimo/fouling-detection-m3h28).
 
+## Data augmentation and cleaning
+
+The entirey of data set 1 (biofouling) was used for training the baseline classifiers (dummy and random forest). 
+In order to train/fine-tune a YOLO model, we needed very specific data structure, including bounding boxes. 
+Data set 2 is already fully annotated in this way. We explored using SAM3 to automate annotation of data set 1 with bounding boxes,
+but this was not possible for all images. After restricting to images where automated annotation with bounding boxes was possible,
+about 6,000 images remained in data set 1.
+
 ## Models
 
 In addition to a dummy classifier baseline, we developed the following models.
