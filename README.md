@@ -82,5 +82,3 @@ we implemented class weights and then fine-tuned the YOLOv8s binary classifier m
 Option A almost did not pick up anything from dataset 1, whereas Option B returned with decent classification, 
 with nil precision 0.9050, recall 0.9898 and f1 0.9455 and biofouling precision 0.5473, recall 0.2020, and f1 0.2951, with IOU set to 0.5.
 
-Still editing.
-
