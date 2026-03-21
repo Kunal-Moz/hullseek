@@ -32,11 +32,15 @@ To be explicit, the random forest classifier is not actually looking at the imag
 The random forest was an ensemble of 500 trees, with max depth of 10, and balanced classes to account for class imbalance.
 As expected, this random forest classifier is very imprecise. Surprisingly, the highest feature as ranked by feature importance score was the paint.quality feature present in the original data set.
 
-We also briefy experimented with some ResNet and EfficientNet based models, but did not obtain any significant results so we abandoned these to pursue YOLO.
+We then experimented with ResNet18 and EfficientNet based models after implementing custom class weights to counter for class imbalance, and found that ResNet18 has better performance in classifying between all 3 SLoF levels. For SLoF level 0, 1 and 2, the obtained precision was 0.851, 0,366, 0.456, with recall 0.668, 0.409, 0.701 respectively, with a validation macro-F1 score over all 3 classes as 0.5623. As ResNet18 was trained trained from scratch, without ImageNet pretraining, we observed from the confusion matrix that the model did learn fouling feature gradient and can successfully differentiate between nil and heavy fouling (confusing nil to heavy or vice versa is less than 0.05), but medium fouling category is very prone to be misclassified as either nil (~0.2) or heavy (~0.3). EfficientNet also did a better job in disguising between nil and heavy, but it misclassified almost all medium fouling images.
+
+Hence, we made a decision to merge medium and heavy category together as one "biofouling" category, and moved to YOLOv8m-cls model, that is better than both ResNet18 and EfficientNet in binary classification. The fouled category had a precion of 0.74, recall 0.65 and f1 0.69, where the nil category had a precision of 0.89, recall 0.93, and f1 0.91, with the overall accuracy of 0.86, AUC 0.868, macro F1 0.80, which is a strong result for a binary classifier on imbalanced data. 
+
 
 ## Data augmentation and cleaning, SAM3
 
-To improve on the baseline, we turned to YOLO, a powerful pretrained computer vision model. 
+As a next step of our project, our new goal was to detect and create bounding boxes for fouling regions, as well as estimate percentage of surface area for biofouling contamination from underwater images. Hence, we turned to YOLOv8s model, a powerful pre-trained computer vision model with 11 million parameters, trained on ImageNet backbone. 
+
 However, in order to use YOLO, we needed data in a particular format, specifically data including certain kinds of bounding boxes.
 Data set 2 already has these bounding boxes, but data set 1 does not. In order to take advantage of the larger size of data set 1,
 we developed a pipeline for processing images in data set 1 to add bounding boxes, utilizing SAM3 (Segment Anything Model). 
@@ -52,12 +56,14 @@ TO ADD: more explanation of how SAM3 does this
 
 ## YOLO
 
-First we fine-tuned a YOLO model on data set 2 to label each bounding box as one of 7 classes (clean, starfish, barnacle, etc.). Then we merged the 6 non-clean classes as "clean."
+Now we fine-tuned the YOLOv8s model on data set 2 to label each bounding box as one of 7 classes (clean surface, starfish, barnacle, etc.). Then we merged the 6 non-clean classes as "biofouling", and kept the "nil" fouling, to be compatible with our binary classifier. The idea is to investigate how the model can learn biofouling from a completely different set of data, and perform on dataset 1.
 
-We then pursued two directions:
+Then we pursued two directions:
 
 A. Apply that YOLO model to the annotated data set 1 as a validation set.
 B. Retrain YOLO model on full annotated data set 1, with balanced representation.
 
-Given the reduced image set of ~1400 SLoF 1/2 images with annotated bounding boxes from biofouling (data set 1), we fine-tuned a YOLO binary classifier model on this data.
+Given the reduced image set of ~1400 SLoF 1/2 images with annotated bounding boxes from biofouling (data set 1), we implemented class weights and then fine-tuned the YOLOv8s binary classifier model, and ran on the validation set. Option A almost did not pick up anything from dataset 1, whereas Option B returned with decent classification, with nil precision 0.9050, recall 0.9898 and f1 0.9455 and biofouling precision 0.5473, recall 0.2020, and f1 0.2951, with IOU set to 0.5.
+
+Still editing.
 
