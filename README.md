@@ -45,7 +45,7 @@ but medium fouling category is very prone to be misclassified as either nil (~0.
 EfficientNet also did a better job in disguising between nil and heavy, but it misclassified almost all medium fouling images.
 
 Hence, we made a decision to merge medium and heavy category together as one "biofouling" category, and moved to YOLOv8m-cls model, 
-that is better than both ResNet18 and EfficientNet in binary classification. The fouled category had a precion of 0.74, 
+that is better than both ResNet18 and EfficientNet in binary classification. The fouled category had a precision of 0.74, 
 recall 0.65 and f1 0.69, where the nil category had a precision of 0.89, recall 0.93, and f1 0.91, 
 with the overall accuracy of 0.86, AUC 0.868, macro F1 0.80, which is a strong result for a binary classifier on imbalanced data. 
 
@@ -56,8 +56,8 @@ as well as estimate percentage of surface area for biofouling contamination from
 Hence, we turned to YOLOv8s model, a powerful pre-trained computer vision model with 11 million parameters, trained on ImageNet backbone. 
 
 In order to use YOLO, we needed data in a particular format, specifically data including certain kinds of bounding boxes.
-Data set 2 already has these bounding boxes, but data set 1 does not. In order to take advantage of the larger size of data set 1,
-we developed a pipeline for processing images in data set 1 to add bounding boxes, utilizing SAM3 (Segment Anything Model). 
+Dataset 2 already has these bounding boxes, but dataset 1 does not. In order to take advantage of the larger size of dataset 1,
+we developed a pipeline for processing images in dataset 1 to add bounding boxes, utilizing SAM3 (Segment Anything Model). 
 
 First, we sorted images in data set 1 into SLoF level 0 (~7000) and SLoF levels 1 and 2 (~3000).
 For level 0 (little or no fouling), we simply set a single bounding box for the entire image.
@@ -68,17 +68,35 @@ of SLoF level 2 or 3 as a subset of  data set 1 usable with YOLO.
 
 ## YOLO
 
-We fine-tuned the YOLOv8s model on data set 2 to label each bounding box as one of 7 classes (clean surface, starfish, barnacle, etc.). 
+We fine-tuned the YOLOv8s model on dataset 2 to label each bounding box as one of 7 classes (clean surface, starfish, barnacle, etc.). 
 Then we merged the 6 non-clean classes as "biofouling", and kept the "nil" fouling, to be compatible with our binary classifier. 
 The idea is to investigate how the model can learn biofouling from a completely different set of data, and perform on dataset 1.
 
 Then we pursued two directions:
 
-A. Apply that YOLO model to the annotated data set 1 as a validation set.
-B. Retrain YOLO model on full annotated data set 1, with balanced representation.
+A. Apply that YOLO model to the annotated dataset 1 as a validation set.
+B. Retrain YOLO model on full annotated dataset 1, with balanced representation.
 
-Given the reduced image set of ~1400 SLoF 1/2 images with annotated bounding boxes from biofouling (data set 1), 
+Given the reduced image set of ~1400 SLoF 1/2 images with annotated bounding boxes from biofouling (dataset 1), 
 we implemented class weights and then fine-tuned the YOLOv8s binary classifier model, and ran on the validation set. 
 Option A almost did not pick up anything from dataset 1, whereas Option B returned with decent classification, 
-with nil precision 0.9050, recall 0.9898 and f1 0.9455 and biofouling precision 0.5473, recall 0.2020, and f1 0.2951, with IOU set to 0.5.
+with nil precision 0.9050, recall 0.9898 and f1 0.9455 and biofouling precision 0.5473, recall 0.2020, and f1 0.2951, 
+with IOU threshold set to 0.45, after optimization. This means that the model has near perfect performance for clean
+surface, as it was trained on clean and consistently shaped boxes. On the other hand, for biofouling box detection, it
+could only pick about 20% true positive cases, which is a very weak performance. 
+
+To mitigate this issue, we implemented a two step classifier pipeline, which, in Task 1, uses previously YOLOv8m-cls model,
+to classify between nil and fouled images, and for Task 2, the fouled images were passed on the YOLOv8s model to create 
+bounding boxes and calculate the fouling area. The YOLOv8s model was trained on the annotated fouled dataset, with precision 0.42,
+and recall 0.4, which is not great, as our SAM annotated fouling dataset was very limited (~1400 images). However, the model learnt 
+the concept of biofouling decently, and as mathematical complementarity, everything that was not biofouling annotation was 
+implicitly treated as background, which is our case is clean surface, i.e. clean hull, ocean water, equipments etc. 
+
+Hence, this combined pipeline yields us with a overall classification accuracy of 0.86, with "nil" recall to be 0.93, and 
+fouled recall 0.65, and out of the fouled images, 92.5% images generated at least 1 bounding box, with a mean detected fouling area 
+of ~65% of the total area of the fouled images. This is a drastic improvement from the previously used option B strategy.
+
+However, improvements can be made on the ~35% true fouled images that never made to Task 2, due to low recall in Task 1 (~0.65),
+as a result of the limited amount of annotated fouled dataset.
+
 
