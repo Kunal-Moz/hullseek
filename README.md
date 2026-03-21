@@ -1,4 +1,4 @@
-# hullseek
+# Erdos-Spring2026-dl-hullseek
 
 A deep learning computer vision model to detect and classify biofouling intensity on submerged structures (e.g. underwater components of ships).
 
@@ -33,7 +33,7 @@ The random forest was an ensemble of 500 trees with max depth 10, and balanced c
 As expected, this random forest classifier is very imprecise. 
 Surprisingly, the highest feature as ranked by feature importance score was the paint.quality feature present in the original data set.
 
-## ResNet and EfficientNet
+## ResNet, EfficientNet and YOLO
 
 We experimented with ResNet18 and EfficientNet based models after implementing custom class weights to counter for class imbalance, 
 and found that ResNet18 has better performance in classifying between all 3 SLoF levels. 
