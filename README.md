@@ -32,6 +32,8 @@ To be explicit, the random forest classifier is not actually looking at the imag
 The random forest was an ensemble of 500 trees, with max depth of 10, and balanced classes to account for class imbalance.
 As expected, this random forest classifier is very imprecise. Surprisingly, the highest feature as ranked by feature importance score was the paint.quality feature present in the original data set.
 
+We also briefy experimented with some ResNet and EfficientNet based models, but did not obtain any significant results so we abandoned these to pursue YOLO.
+
 ## Data augmentation and cleaning, SAM3
 
 To improve on the baseline, we turned to YOLO, a powerful pretrained computer vision model. 
@@ -47,10 +49,6 @@ Due to various technical limitations, this only worked for about 1400 images, so
 of SLoF level 2 or 3 as a sub-data set.
 
 TO ADD: more explanation of how SAM3 does this
-
-## ResNet and EfficientNet
-
-TO DO: Explain a bit about these
 
 ## YOLO
 
